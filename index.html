@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Doa Tuhan - Uji Pemahamanmu</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Menggunakan Phosphor Icons untuk desain modern -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Tone.js untuk efek suara interaktif -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: #f8fafc; /* Slate 50 - warna yang tenang */
+            color: #1e293b;
+        }
+        
+        /* Animasi kustom */
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+        
+        .slide-up {
+            animation: slideUp 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Styling untuk radio button tersembunyi */
+        .option-radio:checked + div {
+            border-color: #4f46e5; /* Indigo 600 */
+            background-color: #eef2ff; /* Indigo 50 */
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+        
+        .option-radio:checked + div .option-letter {
+            background-color: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
+
+        /* Scrollbar kustom untuk halaman pembahasan */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6 md:p-8">
+        <div id="app-container" class="w-full max-w-3xl">
+            
+            <!-- ================= HOME VIEW ================= -->
+            <div id="view-home" class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 md:p-12 text-center slide-up">
+                <div class="w-16 h-16 md:w-20 md:h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 text-indigo-600">
+                    <i class="ph ph-book-open-text text-3xl md:text-4xl"></i>
+                </div>
+                <h1 class="text-3xl md:text-5xl font-bold text-slate-800 mb-2 md:mb-4">KUIS DOA TUHAN</h1>
+                <h2 class="text-lg md:text-2xl text-indigo-600 font-medium mb-2">Uji Pemahamanmu tentang Doa Bapa Kami</h2>
+                <p class="text-sm md:text-base text-slate-500 italic mb-6 md:mb-8">App by Clara Abellya Agustin</p>
+                
+                <p class="text-base md:text-lg text-slate-600 mb-6 md:mb-8 max-w-lg mx-auto leading-relaxed">
+                    Jawablah setiap pertanyaan dengan teliti dan lihat seberapa baik pemahamanmu mengenai makna, struktur, dan penghayatan Doa Tuhan.
+                </p>
+
+                <div class="bg-slate-50 rounded-xl p-4 md:p-6 mb-6 md:mb-8 text-left max-w-md mx-auto border border-slate-100">
+                    <h3 class="font-semibold text-slate-700 mb-3 md:mb-4 flex items-center gap-2 text-sm md:text-base">
+                        <i class="ph ph-info text-indigo-500 text-lg md:text-xl"></i> Informasi Kuis
+                    </h3>
+                    <ul class="space-y-2 md:space-y-3 text-xs md:text-sm text-slate-600">
+                        <li class="flex items-center gap-2 md:gap-3"><i class="ph ph-list-numbers text-base md:text-lg"></i> Jumlah soal: 10</li>
+                        <li class="flex items-center gap-2 md:gap-3"><i class="ph ph-check-circle text-base md:text-lg"></i> Bentuk soal: Pilihan Ganda (4 Pilihan)</li>
+                        <li class="flex items-center gap-2 md:gap-3"><i class="ph ph-calculator text-base md:text-lg"></i> Sistem penilaian: Otomatis</li>
+                        <li class="flex items-center gap-2 md:gap-3"><i class="ph ph-lightbulb text-base md:text-lg"></i> Pembahasan: Tersedia setelah kuis</li>
+                    </ul>
+                </div>
+
+                <button onclick="showModal('modal-start')" class="w-full sm:w-auto px-6 py-3.5 md:px-8 md:py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-base md:text-lg transition-all shadow-lg hover:shadow-indigo-200 hover:-translate-y-1">
+                    MULAI KUIS
+                </button>
+            </div>
+
+            <!-- ================= QUIZ VIEW ================= -->
+            <div id="view-quiz" class="hidden">
+                <!-- Header: Progress -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-3 md:p-4 mb-4 md:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
+                    <div class="flex justify-between items-center w-full sm:w-auto">
+                        <span class="text-xs md:text-sm font-semibold text-indigo-600 bg-indigo-50 px-3 py-1.5 md:py-1 rounded-full" id="question-counter">Soal 1 dari 10</span>
+                        <span id="progress-text-mobile" class="sm:hidden text-xs font-bold text-slate-500">10%</span>
+                    </div>
+                    <div class="flex-grow w-full sm:max-w-xs flex items-center gap-3">
+                        <div class="w-full bg-slate-200 rounded-full h-1.5 md:h-2.5 overflow-hidden">
+                            <div id="progress-bar" class="bg-indigo-600 h-full rounded-full transition-all duration-500 ease-out" style="width: 10%"></div>
+                        </div>
+                        <span id="progress-text-desktop" class="hidden sm:inline-block text-xs font-bold text-slate-500 w-10 text-right">10%</span>
+                    </div>
+                </div>
+
+                <!-- Main Question Card -->
+                <div class="bg-white rounded-2xl shadow-xl p-5 md:p-8 fade-in" id="question-card">
+                    <h3 class="text-lg md:text-2xl font-semibold text-slate-800 mb-6 md:mb-8 leading-snug" id="question-text">
+                        <!-- Pertanyaan akan dirender di sini -->
+                    </h3>
+
+                    <div class="space-y-3 md:space-y-4" id="options-container">
+                        <!-- Pilihan jawaban akan dirender di sini -->
+                    </div>
+
+                    <div class="mt-6 md:mt-8 pt-5 md:pt-6 border-t border-slate-100 flex justify-end">
+                        <button id="btn-next" onclick="handleNext()" class="w-full sm:w-auto px-8 py-3.5 md:py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                            Lanjut <i class="ph ph-arrow-right font-bold"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= RESULT VIEW ================= -->
+            <div id="view-result" class="hidden bg-white rounded-2xl shadow-xl p-6 sm:p-8 md:p-12 text-center fade-in">
+                <div class="inline-block p-3 md:p-4 rounded-full bg-green-50 text-green-500 mb-4" id="result-icon-container">
+                    <i class="ph ph-trophy text-4xl md:text-5xl"></i>
+                </div>
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2">KUIS SELESAI!</h2>
+                
+                <div class="my-6 md:my-8">
+                    <div class="text-5xl sm:text-6xl md:text-8xl font-black text-indigo-600 tracking-tighter drop-shadow-sm" id="final-score">
+                        0/100
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-4 sm:gap-8 mb-6 md:mb-8 border-y border-slate-100 py-4 md:py-6">
+                    <div class="text-center px-2">
+                        <div class="text-2xl md:text-3xl font-bold text-green-500 mb-1" id="count-correct">0</div>
+                        <div class="text-[10px] md:text-xs uppercase tracking-wider font-semibold text-slate-400">Benar</div>
+                    </div>
+                    <div class="w-px bg-slate-200 hidden sm:block"></div>
+                    <div class="text-center px-2">
+                        <div class="text-2xl md:text-3xl font-bold text-red-500 mb-1" id="count-wrong">0</div>
+                        <div class="text-[10px] md:text-xs uppercase tracking-wider font-semibold text-slate-400">Salah</div>
+                    </div>
+                    <div class="w-px bg-slate-200 hidden sm:block"></div>
+                    <div class="text-center px-2">
+                        <div class="text-2xl md:text-3xl font-bold text-blue-500 mb-1" id="final-percentage">0%</div>
+                        <div class="text-[10px] md:text-xs uppercase tracking-wider font-semibold text-slate-400">Nilai</div>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 p-4 md:p-6 rounded-xl border border-indigo-100 mb-6 md:mb-8">
+                    <p class="text-base md:text-lg font-medium text-indigo-900" id="result-message">
+                        <!-- Pesan hasil akan muncul di sini -->
+                    </p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row justify-center gap-3 md:gap-4">
+                    <button onclick="showExplanation()" class="w-full sm:w-auto px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                        <i class="ph ph-list-magnifying-glass text-lg"></i> Lihat Pembahasan
+                    </button>
+                    <button onclick="restartQuiz()" class="w-full sm:w-auto px-6 py-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                        <i class="ph ph-arrow-counter-clockwise text-lg"></i> Ulangi Kuis
+                    </button>
+                    <button onclick="goHome()" class="w-full sm:w-auto px-6 py-3 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                        <i class="ph ph-house text-lg"></i> Beranda
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= EXPLANATION VIEW ================= -->
+            <div id="view-explanation" class="hidden fade-in">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 md:mb-6 bg-white p-3 md:p-4 rounded-2xl shadow-sm border border-slate-200 sticky top-2 md:top-4 z-10">
+                    <h2 class="text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i class="ph ph-list-magnifying-glass text-indigo-600"></i> Pembahasan Kuis
+                    </h2>
+                    <button onclick="hideExplanation()" class="w-full sm:w-auto px-4 py-2.5 md:py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors text-center">
+                        Kembali ke Hasil
+                    </button>
+                </div>
+
+                <div id="explanation-container" class="space-y-4 md:space-y-6">
+                    <!-- List pembahasan akan dirender di sini -->
+                </div>
+                
+                <div class="mt-6 md:mt-8 text-center pb-8">
+                    <button onclick="hideExplanation()" class="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors">
+                        Selesai Membaca
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ================= MODALS ================= -->
+    <!-- Overlay -->
+    <div id="modal-overlay" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"></div>
+
+    <!-- Start Confirm Modal -->
+    <div id="modal-start" class="hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-11/12 max-w-sm z-50 text-center slide-up">
+        <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="ph ph-rocket-launch text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-800 mb-2">Siap Memulai?</h3>
+        <p class="text-slate-600 text-sm mb-6">Waktu tidak dibatasi, kerjakan dengan teliti.</p>
+        <div class="flex gap-3">
+            <button onclick="closeModal('modal-start')" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-colors">Batal</button>
+            <button onclick="startQuiz()" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors">Ya, Mulai</button>
+        </div>
+    </div>
+
+    <!-- Finish Confirm Modal -->
+    <div id="modal-finish" class="hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-11/12 max-w-sm z-50 text-center slide-up">
+        <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="ph ph-flag-checkered text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-800 mb-2">Selesai Kuis?</h3>
+        <p class="text-slate-600 text-sm mb-6">Apakah kamu yakin ingin menyelesaikan kuis dan melihat hasilnya?</p>
+        <div class="flex gap-3">
+            <button onclick="closeModal('modal-finish')" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-colors">Kembali</button>
+            <button onclick="submitQuiz()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors">Ya, Selesaikan</button>
+        </div>
+    </div>
+
+    <!-- Alert Warning Modal -->
+    <div id="modal-alert" class="hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-11/12 max-w-sm z-50 text-center slide-up border-t-4 border-amber-500">
+        <div class="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="ph ph-warning-circle text-3xl font-bold"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800 mb-2">Perhatian</h3>
+        <p class="text-slate-600 text-sm mb-6" id="alert-message">Silakan pilih salah satu jawaban terlebih dahulu.</p>
+        <button onclick="closeModal('modal-alert')" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium transition-colors">Mengerti</button>
+    </div>
+
+    <script>
+        // Data Soal (Persis seperti yang diminta di prompt)
+        const quizData = [
+            {
+                id: 1,
+                question: "Berdasarkan Injil Matius, Doa Bapa Kami (Doa Tuhan) tertulis dalam pasal dan ayat berapa?",
+                options: [
+                    "Matius 5:1–12",
+                    "Matius 6:9–13",
+                    "Matius 7:7–11",
+                    "Matius 18:15–20"
+                ],
+                correctAnswerIndex: 1, // B
+                explanation: "Sesuai dengan referensi ayat yang tertera pada materi."
+            },
+            {
+                id: 2,
+                question: "Struktur Doa Bapa Kami secara garis besar dibagi menjadi dua kelompok permohonan, yaitu...",
+                options: [
+                    "Untuk memuliakan Tuhan dan untuk kepentingan manusia",
+                    "Untuk keselamatan jiwa dan untuk kekayaan duniawi",
+                    "Untuk kepentingan gereja dan untuk kepentingan pemerintah",
+                    "Untuk pengampunan dosa dan untuk pengusiran roh jahat"
+                ],
+                correctAnswerIndex: 0, // A
+                explanation: "Struktur Doa Tuhan terbagi atas dua fokus utama, yaitu untuk memuliakan Tuhan dan untuk kepentingan manusia."
+            },
+            {
+                id: 3,
+                question: "Manakah permohonan berikut yang termasuk dalam bagian \"Untuk Memuliakan Tuhan\"?",
+                options: [
+                    "Berikanlah kami pada hari ini makanan kami yang secukupnya",
+                    "Ampunilah kami akan kesalahan kami",
+                    "Dikuduskanlah nama-Mu, datanglah kerajaan-Mu, jadilah kehendak-Mu",
+                    "Janganlah membawa kami ke dalam pencobaan"
+                ],
+                correctAnswerIndex: 2, // C
+                explanation: "Tiga permohonan pertama ditujukan untuk kemuliaan Allah."
+            },
+            {
+                id: 4,
+                question: "Makna dari ungkapan \"Bapa kami yang ada di sorga\" menjelaskan bahwa...",
+                options: [
+                    "Allah adalah pencipta yang jauh dan tidak terjangkau manusia",
+                    "Allah adalah Bapa kita dan karena kasih-Nya, Ia mengangkat kita menjadi anak-anak-Nya yang istimewa",
+                    "Manusia dapat memerintah Allah sesuai dengan kehendaknya",
+                    "Sorga adalah tempat yang hanya diperuntukkan bagi nabi-nabi"
+                ],
+                correctAnswerIndex: 1, // B
+                explanation: "Makna ungkapan tersebut menunjukkan bahwa Allah adalah Bapa kita dan karena kasih-Nya, Ia mengangkat kita menjadi anak-anak-Nya yang istimewa."
+            },
+            {
+                id: 5,
+                question: "Bagaimana seharusnya kita menghayati makna permohonan \"Dikuduskanlah/Dimuliakanlah nama-Mu\" dalam kehidupan sehari-hari?",
+                options: [
+                    "Cukup memuliakan nama Tuhan saat berada di tempat ibadah saja",
+                    "Memuliakan nama Allah baik dalam doa maupun kehidupan nyata, serta tidak menyebut nama-Nya dengan tidak hormat",
+                    "Menggunakan nama Tuhan untuk bersumpah dalam urusan duniawi",
+                    "Membiarkan orang lain menghina nama Tuhan tanpa perlu dipedulikan"
+                ],
+                correctAnswerIndex: 1, // B
+                explanation: "Pengkudusan nama Tuhan tidak hanya dilakukan dalam doa atau tempat ibadah, tetapi juga diwujudkan melalui kehidupan sehari-hari dengan menghormati nama-Nya."
+            },
+            {
+                id: 6,
+                question: "Menurut materi, apakah yang dimaksud dengan Kerajaan Allah?",
+                options: [
+                    "Kerajaan duniawi dengan kekuasaan politik yang kuat",
+                    "Damai sejahtera, sukacita, dan kebenaran oleh karena firman-Nya",
+                    "Tempat yang hanya ada di dalam imajinasi manusia",
+                    "Sebuah wilayah kekuasaan fisik di bumi"
+                ],
+                correctAnswerIndex: 1, // B
+                explanation: "Menurut materi, Kerajaan Allah berkaitan dengan damai sejahtera, sukacita, dan kebenaran oleh karena firman-Nya."
+            },
+            {
+                id: 7,
+                question: "Permohonan \"Berilah kami rejeki pada hari ini\" mengajarkan kita bahwa...",
+                options: [
+                    "Kita tidak perlu bekerja, cukup berdoa saja maka rezeki akan datang",
+                    "Tuhan peduli dan mengerti kebutuhan kita, sehingga kita memintanya kepada Allah sekaligus berusaha di dalamnya",
+                    "Rezeki yang dimaksud hanya terbatas pada makanan fisik saja",
+                    "Tuhan hanya memberikan rezeki kepada orang yang tidak pernah berbuat dosa"
+                ],
+                correctAnswerIndex: 1, // B
+                explanation: "Permohonan ini mengajarkan keseimbangan antara memohon rezeki kepada Allah dan tetap berusaha dalam kehidupan."
+            },
+            {
+                id: 8,
+                question: "Konsekuensi atau syarat penting saat kita memohon pengampunan dosa kepada Allah dalam Doa Bapa Kami adalah...",
+                options: [
+                    "Memberikan persembahan yang besar",
+                    "Mengampuni segala dosa orang lain yang menyakiti hati kita",
+                    "Menghukum orang yang telah bersalah kepada kita",
+                    "Menceritakan dosa kita kepada semua orang"
+                ],
+                correctAnswerIndex: 1, // B
+                explanation: "Hal ini sesuai dengan prinsip \"seperti kami pun mengampuni yang bersalah kepada kami\"."
+            },
+            {
+                id: 9,
+                question: "Kesamaan struktur antara Doa Tuhan dan Dekalog (Sepuluh Perintah Allah) adalah...",
+                options: [
+                    "Keduanya sama-sama ditulis oleh Nabi Musa",
+                    "Keduanya hanya berfokus pada hukuman bagi orang berdosa",
+                    "Keduanya memiliki dua bagian: satu mengatur hubungan dengan Tuhan dan satu mengatur hubungan dengan sesama",
+                    "Keduanya merupakan doa wajib yang dibacakan saat upacara kenegaraan"
+                ],
+                correctAnswerIndex: 2, // C
+                explanation: "Doa Tuhan memiliki bagian untuk memuliakan Tuhan dan bagian untuk kepentingan manusia. Hal tersebut memiliki kesamaan dengan Dekalog yang mengatur hubungan dengan Tuhan dan hubungan dengan sesama."
+            },
+            {
+                id: 10,
+                question: "Doa Trinitas mencerminkan pengakuan iman kita akan karya Allah Tritunggal, yaitu...",
+                options: [
+                    "Memuliakan Bapa, Putra, dan Roh Kudus yang menghantarkan kita kepada kebaikan dan terhindar dari yang jahat",
+                    "Memuliakan para malaikat dan orang kudus di sorga",
+                    "Mengakui bahwa ada tiga Tuhan yang berbeda",
+                    "Memohon perlindungan hanya saat mengalami kesusahan hidup"
+                ],
+                correctAnswerIndex: 0, // A
+                explanation: "Doa Trinitas mencerminkan iman kepada Allah Tritunggal, yaitu Bapa, Putra, dan Roh Kudus, serta karya-Nya yang menuntun manusia kepada kebaikan dan menjauhkan dari yang jahat."
+            }
+        ];
+
+        // State Variabel
+        let currentQuestionIndex = 0;
+        let userAnswers = new Array(quizData.length).fill(null);
+        let selectedOptionTemp = null;
+        const LETTERS = ['A', 'B', 'C', 'D'];
+
+        // Variabel Audio untuk Efek Suara
+        let correctSynth, wrongSynth;
+        
+        async function initAudio() {
+            await Tone.start();
+            if(!correctSynth) {
+                // Suara "Benar" - Polifoni bahagia
+                correctSynth = new Tone.PolySynth(Tone.Synth).toDestination();
+                correctSynth.volume.value = -8; 
+            }
+            if(!wrongSynth) {
+                // Suara "Salah" - Nada turun/buzzer
+                wrongSynth = new Tone.Synth({
+                    oscillator: { type: "sawtooth" },
+                    envelope: { attack: 0.05, decay: 0.2, sustain: 0.2, release: 0.5 }
+                }).toDestination();
+                wrongSynth.volume.value = -8;
+            }
+        }
+
+        function playCorrectSound() {
+            if(correctSynth) {
+                const now = Tone.now();
+                correctSynth.triggerAttackRelease(["C5", "E5", "G5"], "8n", now);
+            }
+        }
+
+        function playWrongSound() {
+            if(wrongSynth) {
+                const now = Tone.now();
+                wrongSynth.triggerAttackRelease("Eb3", "8n", now);
+                wrongSynth.triggerAttackRelease("C3", "4n", now + 0.15);
+            }
+        }
+
+        // Helper: Format Angka
+        const formatScore = (num) => Math.round(num);
+
+        // DOM Elements - Views
+        const viewHome = document.getElementById('view-home');
+        const viewQuiz = document.getElementById('view-quiz');
+        const viewResult = document.getElementById('view-result');
+        const viewExplanation = document.getElementById('view-explanation');
+
+        function hideAllViews() {
+            viewHome.classList.add('hidden');
+            viewQuiz.classList.add('hidden');
+            viewResult.classList.add('hidden');
+            viewExplanation.classList.add('hidden');
+        }
+
+        function goHome() {
+            hideAllViews();
+            viewHome.classList.remove('hidden');
+            // Animasi ulang
+            viewHome.classList.remove('slide-up');
+            void viewHome.offsetWidth; // trigger reflow
+            viewHome.classList.add('slide-up');
+        }
+
+        function showModal(modalId) {
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById('modal-overlay').classList.add('hidden');
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function showAlert(msg) {
+            document.getElementById('alert-message').textContent = msg;
+            showModal('modal-alert');
+        }
+
+        function startQuiz() {
+            initAudio(); // Memulai audio saat ada interaksi pertama
+            closeModal('modal-start');
+            currentQuestionIndex = 0;
+            userAnswers = new Array(quizData.length).fill(null);
+            selectedOptionTemp = null;
+            
+            hideAllViews();
+            viewQuiz.classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const data = quizData[currentQuestionIndex];
+            selectedOptionTemp = null; // Reset pilihan sementara setiap ganti soal
+
+            // Update Progress
+            const progressPercent = ((currentQuestionIndex) / quizData.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+            
+            const pTextMobile = document.getElementById('progress-text-mobile');
+            const pTextDesktop = document.getElementById('progress-text-desktop');
+            if(pTextMobile) pTextMobile.textContent = `${Math.round(progressPercent)}%`;
+            if(pTextDesktop) pTextDesktop.textContent = `${Math.round(progressPercent)}%`;
+            
+            document.getElementById('question-counter').textContent = `Soal ${currentQuestionIndex + 1} dari ${quizData.length}`;
+
+            // Update Pertanyaan
+            const qCard = document.getElementById('question-card');
+            qCard.classList.remove('fade-in');
+            void qCard.offsetWidth; // trigger reflow untuk re-animasi
+            qCard.classList.add('fade-in');
+            
+            document.getElementById('question-text').innerHTML = `${currentQuestionIndex + 1}. ${data.question}`;
+
+            // Render Pilihan
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            data.options.forEach((optText, index) => {
+                const isSelected = userAnswers[currentQuestionIndex] === index; // Jika fitur back diaktifkan, ini berguna. Saat ini selalu null.
+                
+                const optionHtml = `
+                    <label class="block cursor-pointer group">
+                        <input type="radio" name="option" class="option-radio hidden" value="${index}" ${isSelected ? 'checked' : ''} onchange="selectOption(${index})">
+                        <div class="flex items-start p-3 md:p-4 rounded-xl border-2 border-slate-200 transition-all duration-200 hover:border-indigo-300 hover:bg-slate-50">
+                            <div class="option-letter flex-shrink-0 w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg border-2 border-slate-300 text-xs md:text-sm font-bold text-slate-500 mr-3 md:mr-4 transition-colors">
+                                ${LETTERS[index]}
+                            </div>
+                            <div class="text-slate-700 pt-0.5 md:pt-1 text-sm md:text-base leading-snug font-medium">
+                                ${optText}
+                            </div>
+                        </div>
+                    </label>
+                `;
+                optionsContainer.insertAdjacentHTML('beforeend', optionHtml);
+            });
+
+            // Update Tombol Next/Selesai
+            const btnNext = document.getElementById('btn-next');
+            if (currentQuestionIndex === quizData.length - 1) {
+                btnNext.innerHTML = `SELESAI <i class="ph ph-check-circle font-bold"></i>`;
+                btnNext.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                btnNext.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            } else {
+                btnNext.innerHTML = `Lanjut <i class="ph ph-arrow-right font-bold"></i>`;
+                btnNext.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                btnNext.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+            }
+        }
+
+        function selectOption(index) {
+            selectedOptionTemp = index;
+        }
+
+        function handleNext() {
+            if (selectedOptionTemp === null) {
+                showAlert("Silakan pilih salah satu jawaban terlebih dahulu.");
+                return;
+            }
+
+            // Kunci jawaban
+            userAnswers[currentQuestionIndex] = selectedOptionTemp;
+
+            // Mainkan efek suara (Benar/Salah)
+            const isCorrect = selectedOptionTemp === quizData[currentQuestionIndex].correctAnswerIndex;
+            if (isCorrect) {
+                playCorrectSound();
+            } else {
+                playWrongSound();
+            }
+
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            } else {
+                // Menuju soal terakhir, minta konfirmasi
+                showModal('modal-finish');
+            }
+        }
+
+        function submitQuiz() {
+            closeModal('modal-finish');
+            
+            // Set final progress to 100%
+            document.getElementById('progress-bar').style.width = `100%`;
+            
+            const pTextMobile = document.getElementById('progress-text-mobile');
+            const pTextDesktop = document.getElementById('progress-text-desktop');
+            if(pTextMobile) pTextMobile.textContent = `100%`;
+            if(pTextDesktop) pTextDesktop.textContent = `100%`;
+
+            setTimeout(() => {
+                calculateResults();
+            }, 300); // Sedikit delay untuk efek penuh progress bar
+        }
+
+        function calculateResults() {
+            let correctCount = 0;
+            userAnswers.forEach((ans, index) => {
+                if (ans === quizData[index].correctAnswerIndex) {
+                    correctCount++;
+                }
+            });
+
+            const totalQuestions = quizData.length;
+            const wrongCount = totalQuestions - correctCount;
+            const score = (correctCount / totalQuestions) * 100;
+
+            // Render Results
+            document.getElementById('final-score').textContent = `${formatScore(score)}/100`;
+            document.getElementById('count-correct').textContent = correctCount;
+            document.getElementById('count-wrong').textContent = wrongCount;
+            document.getElementById('final-percentage').textContent = `${formatScore(score)}%`;
+
+            // Custom Message
+            let message = "";
+            let iconClass = "";
+            if (score >= 90) {
+                message = "Luar biasa! Pemahamanmu tentang Doa Tuhan sangat baik.";
+                iconClass = "ph ph-crown text-yellow-500";
+            } else if (score >= 80) {
+                message = "Bagus! Kamu sudah memahami sebagian besar materi Doa Tuhan.";
+                iconClass = "ph ph-thumbs-up text-green-500";
+            } else if (score >= 70) {
+                message = "Cukup baik! Pelajari kembali beberapa bagian materi agar pemahamanmu semakin kuat.";
+                iconClass = "ph ph-smiley text-blue-500";
+            } else {
+                message = "Jangan menyerah! Coba pelajari kembali materi dan pembahasan, kemudian ulangi kuis.";
+                iconClass = "ph ph-hand-heart text-indigo-500";
+            }
+
+            document.getElementById('result-message').innerHTML = `<i class="${iconClass} mr-2"></i> ${message}`;
+
+            hideAllViews();
+            viewResult.classList.remove('hidden');
+            
+            // Re-trigger animation
+            viewResult.classList.remove('fade-in');
+            void viewResult.offsetWidth;
+            viewResult.classList.add('fade-in');
+        }
+
+        function restartQuiz() {
+            showModal('modal-start');
+        }
+
+        function showExplanation() {
+            hideAllViews();
+            viewExplanation.classList.remove('hidden');
+            window.scrollTo(0, 0);
+
+            const container = document.getElementById('explanation-container');
+            container.innerHTML = ''; // Clear previous
+
+            quizData.forEach((data, index) => {
+                const userAnsIndex = userAnswers[index];
+                const isCorrect = userAnsIndex === data.correctAnswerIndex;
+                
+                const statusBadge = isCorrect 
+                    ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200"><i class="ph ph-check font-bold mr-1"></i> Jawaban Benar</span>`
+                    : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200"><i class="ph ph-x font-bold mr-1"></i> Jawaban Salah</span>`;
+
+                let optionsHtml = '';
+                data.options.forEach((opt, optIdx) => {
+                    let optStyle = "text-slate-600 bg-slate-50 border-slate-200";
+                    let icon = "";
+                    
+                    if (optIdx === data.correctAnswerIndex) {
+                        // Kunci Jawaban
+                        optStyle = "text-green-800 bg-green-50 border-green-300 font-medium";
+                        icon = `<i class="ph ph-check-circle text-green-500 text-lg md:text-xl shrink-0"></i>`;
+                    } else if (optIdx === userAnsIndex && !isCorrect) {
+                        // Jawaban user yang salah
+                        optStyle = "text-red-800 bg-red-50 border-red-300";
+                        icon = `<i class="ph ph-x-circle text-red-500 text-lg md:text-xl shrink-0"></i>`;
+                    }
+
+                    optionsHtml += `
+                        <div class="flex justify-between items-center p-2.5 md:p-3 rounded-lg border ${optStyle} mb-2 text-xs md:text-sm">
+                            <div class="flex items-start gap-2 md:gap-3 pr-2">
+                                <span class="font-bold opacity-70">${LETTERS[optIdx]}.</span>
+                                <span class="leading-snug">${opt}</span>
+                            </div>
+                            ${icon}
+                        </div>
+                    `;
+                });
+
+                const itemHtml = `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 mb-4 md:mb-6">
+                        <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-3 md:mb-4">
+                            <div class="bg-indigo-100 text-indigo-700 font-bold w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-xs md:text-sm shrink-0">
+                                ${index + 1}
+                            </div>
+                            ${statusBadge}
+                        </div>
+                        <h4 class="text-sm md:text-base font-semibold text-slate-800 mb-3 md:mb-4 leading-relaxed">${data.question}</h4>
+                        
+                        <div class="mb-4 md:mb-5">
+                            ${optionsHtml}
+                        </div>
+
+                        <div class="bg-indigo-50/50 rounded-lg p-3 md:p-4 border border-indigo-100/50">
+                            <h5 class="text-[10px] md:text-xs font-bold text-indigo-800 uppercase tracking-wider mb-1.5 md:mb-2 flex items-center gap-1.5 md:gap-2">
+                                <i class="ph ph-book-open-text text-sm md:text-base"></i> Pembahasan
+                            </h5>
+                            <p class="text-slate-700 text-xs md:text-sm leading-relaxed">${data.explanation}</p>
+                        </div>
+                    </div>
+                `;
+                
+                container.insertAdjacentHTML('beforeend', itemHtml);
+            });
+        }
+
+        function hideExplanation() {
+            hideAllViews();
+            viewResult.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+    </script>
+</body>
+</html>
